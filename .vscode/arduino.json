@@ -1,9 +1,9 @@
 {
-    "sketch": "Polivun_v2.0.ino",
+    "sketch": "TEST_GSM.ino\\TEST_GSM.ino.ino",
     "port": "COM6",
-    "board": "arduino:avr:mega",
+    "board": "arduino:avr:nano",
     "output": "../build",
     "debugger": "jlink",
-    "programmer": "AVR ISP",
-    "configuration": "cpu=atmega2560"
+    "programmer": "Arduino as ISP",
+    "configuration": "cpu=atmega328old"
 }
