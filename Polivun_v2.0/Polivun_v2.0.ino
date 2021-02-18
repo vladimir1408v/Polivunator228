@@ -2,7 +2,6 @@
 #include <LCD_1602_RUS.h>
 #include <IRremote.h>
 #include <SmartDelay.h>
-#include <GSM.h>
 
 
 #define KEY_OK 16726215
@@ -69,7 +68,7 @@ int g_iSetParameters = 0;
 int g_iStepSetTime = 0;
 
 
-IRrecv irrecv(A0);
+IRrecv irrecv(12);
 decode_results results;
 
 void setup()
@@ -81,7 +80,7 @@ void setup()
     pinMode(6, OUTPUT); // Полив
     pinMode(7, OUTPUT); // Полив
 
-    lcd.init();
+    lcd.begin();
     if (g_bLcdBrigtlight)
     {
         lcd.backlight();
@@ -147,7 +146,7 @@ void Key()
 {
     if (irrecv.decode(&results)) // если данные пришли выполняем команды
     {
-        //Serial.println(results.value); // отправляем полученные данные на порт
+        Serial.println(results.value); // отправляем полученные данные на порт
         switch (MENU_LCD)
         {
         case MENU_HOME:
