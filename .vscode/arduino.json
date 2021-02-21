@@ -1,9 +1,9 @@
 {
     "sketch": "TEST_GSM.ino\\TEST_GSM.ino.ino",
-    "port": "COM6",
-    "board": "arduino:avr:nano",
+    "port": "COM8",
+    "board": "arduino:avr:mega",
     "output": "../build",
     "debugger": "jlink",
     "programmer": "Arduino as ISP",
-    "configuration": "cpu=atmega328old"
+    "configuration": "cpu=atmega2560"
 }

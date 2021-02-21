@@ -9,7 +9,7 @@ public:
   void (*pt2Func)(String ) = NULL;
 
   SmsWork(){
-    mySerial = new SoftwareSerial(11, 12);
+    mySerial = new SoftwareSerial(9, 8);
     mySerial->begin(4800);
     mySerial->write("AT+CMGF=1\r");
   }
@@ -52,22 +52,3 @@ public:
     
   }
 };
-
-SmsWork sms_device;
-
-void receivesms(String str)
-{
-  if(str == "Offer jtdcb its boon scrub")
-    Serial.write("EEES");
-}
-
-void setup()
-{
-  sms_device.pt2Func = &receivesms;
-  Serial.begin(9600);
-}
-
-void loop() // выполняется циклически
-{
-  sms_device.Work();
-}

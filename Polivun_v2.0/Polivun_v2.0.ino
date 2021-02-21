@@ -1,4 +1,5 @@
 #include "DHT.h"
+#include "GSM_POLIV.h"
 #include <LCD_1602_RUS.h>
 #include <IRremote.h>
 #include <SmartDelay.h>
@@ -37,6 +38,7 @@ enum Page{
 
 LCD_1602_RUS lcd(0x27, 16, 2);
 DHT dht(4, DHT11);
+SmsWork sms_device;
 
 SmartDelay ReadTemperature(1000000UL);
 SmartDelay ReadPoliv(1000000UL);
@@ -71,6 +73,12 @@ int g_iStepSetTime = 0;
 IRrecv irrecv(12);
 decode_results results;
 
+void receivesms(String str)
+{
+  if(str == "Offer jtdcb its boon scrub")
+    Serial.write("EEES");
+}
+
 void setup()
 {
     g_iTimeSec1 = g_iTimeSetupSettings1;
@@ -93,12 +101,15 @@ void setup()
     Serial.println("Start");
     irrecv.enableIRIn(); // Start the receiver
     dht.begin(); // Запускаем датчик
+
+    sms_device.pt2Func = &receivesms;
 }
 
 void loop()
 {
     Key();
     Menu();
+    sms_device.Work();
     if(ReadTemperature.Now()){
         // Сохраняем предыдущую температуру для проверки
         int l_iTemp = g_iTemp;
