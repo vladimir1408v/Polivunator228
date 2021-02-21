@@ -9,8 +9,10 @@ public:
   void (*pt2Func)(String ) = NULL;
 
   SmsWork(){
-    mySerial = new SoftwareSerial(9, 8);
+    // Инициализируем работу виртуального Serial порта
+    mySerial = new SoftwareSerial(10, 11);
     mySerial->begin(4800);
+    // Устанавливаем режим работы GSM модуля в режим текстовых сообщений
     mySerial->write("AT+CMGF=1\r");
   }
 
@@ -24,8 +26,8 @@ public:
       if (readSIM == '\r')
       {
 
-        //for (int i = 0; i < bufferSIM.length(); i++)
-          //Serial.write(bufferSIM[i]);
+        for (int i = 0; i < bufferSIM.length(); i++)
+          Serial.write(bufferSIM[i]);
           
         if (bufferSIM.substring(1, 6) == "+CMTI")
         {

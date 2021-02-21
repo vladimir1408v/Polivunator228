@@ -3,7 +3,7 @@
 #include <LCD_1602_RUS.h>
 #include <IRremote.h>
 #include <SmartDelay.h>
-
+#include <iarduino_RTC.h>
 
 #define KEY_OK 16726215
 #define KEY_LEFT 16716015
@@ -36,10 +36,15 @@ enum Page{
     MENU_SET_PARAMETERS
 };
 
+// Объявляем объекты библиотек и передаём в конструктор параметры инициализации
 LCD_1602_RUS lcd(0x27, 16, 2);
 DHT dht(4, DHT11);
 SmsWork sms_device;
+iarduino_RTC time(RTC_DS3231);
+IRrecv irrecv(12);
+decode_results results;
 
+// Инициализируем таймеры
 SmartDelay ReadTemperature(1000000UL);
 SmartDelay ReadPoliv(1000000UL);
 
@@ -69,14 +74,30 @@ long int g_iTimeSetupSettings3 = 1200;
 int g_iSetParameters = 0;
 int g_iStepSetTime = 0;
 
-
-IRrecv irrecv(12);
-decode_results results;
-
 void receivesms(String str)
 {
-  if(str == "Offer jtdcb its boon scrub")
-    Serial.write("EEES");
+  if (str == "ON")
+  {
+      digitalWrite(5, HIGH);
+      g_iTimeSec1 = -1000;
+      digitalWrite(6, HIGH);
+      g_iTimeSec2 = -1000;
+      digitalWrite(7, HIGH);
+      g_iTimeSec3 = -1000;
+      g_bMenuReftach = true;
+  } else 
+  if (str == "OFF")
+  {
+      digitalWrite(5, LOW);
+      g_iTimeSec1 = g_iTimeSetupSettings1;
+      digitalWrite(6, LOW);
+      g_iTimeSec2 = g_iTimeSetupSettings2;
+      digitalWrite(7, LOW);
+      g_iTimeSec3 = g_iTimeSetupSettings3;
+      g_bMenuReftach = true;
+  }
+  
+  //Serial.write("EEES");
 }
 
 void setup()
@@ -101,12 +122,18 @@ void setup()
     Serial.println("Start");
     irrecv.enableIRIn(); // Start the receiver
     dht.begin(); // Запускаем датчик
-
+    time.begin();
+    //time.settime(0,45,21,21,02,21,7);  // 0  сек, 51 мин, 21 час, 27, октября, 2015 года, вторник
+    
     sms_device.pt2Func = &receivesms;
 }
 
 void loop()
 {
+    if(millis()%1000==0){ // если прошла 1 секунда
+      Serial.println(time.gettime("d-m-Y, H:i:s, D")); // выводим время
+      delay(1); // приостанавливаем на 1 мс, чтоб не выводить время несколько раз за 1мс
+    }
     Key();
     Menu();
     sms_device.Work();
@@ -157,7 +184,7 @@ void Key()
 {
     if (irrecv.decode(&results)) // если данные пришли выполняем команды
     {
-        Serial.println(results.value); // отправляем полученные данные на порт
+        //Serial.println(results.value); // отправляем полученные данные на порт
         switch (MENU_LCD)
         {
         case MENU_HOME:
