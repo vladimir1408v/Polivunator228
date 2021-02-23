@@ -26,8 +26,8 @@ public:
       if (readSIM == '\r')
       {
 
-        for (int i = 0; i < bufferSIM.length(); i++)
-          Serial.write(bufferSIM[i]);
+        //for (int i = 0; i < bufferSIM.length(); i++)
+          //Serial.write(bufferSIM[i]);
           
         if (bufferSIM.substring(1, 6) == "+CMTI")
         {
