@@ -6,7 +6,7 @@ public:
   SoftwareSerial* mySerial;
   String bufferSIM;
   bool ismess = false;
-  void (*pt2Func)(String ) = NULL;
+  void (*pt2Func)(String ) = NULL; // Кэлбек входящего сообщения
 
   SmsWork(){
     // Инициализируем работу виртуального Serial порта
@@ -16,6 +16,9 @@ public:
     mySerial->write("AT+CMGF=1\r");
   }
 
+  /* Функция Work вызывается в цикле Loop, и проверяет
+     входящие сообщения, если получено новое смс то
+     вызывается функция кэлбэк, заданая в функции Setup*/
   void Work()
   {
     if (mySerial->available())
