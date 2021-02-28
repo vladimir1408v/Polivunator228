@@ -3,7 +3,7 @@
 #include <LCD_1602_RUS.h>
 #include <IRremote.h>
 #include <SmartDelay.h>
-
+#include <iarduino_RTC.h>
 
 #define KEY_OK 16726215
 #define KEY_LEFT 16716015
@@ -36,22 +36,23 @@ enum Page{
     MENU_SET_PARAMETERS
 };
 
+// Объявляем объекты библиотек и передаём в конструктор параметры инициализации
 LCD_1602_RUS lcd(0x27, 16, 2);
 DHT dht(4, DHT11);
 SmsWork sms_device;
+iarduino_RTC time(RTC_DS3231);
+IRrecv irrecv(12);
+decode_results results;
 
+// Инициализируем таймеры
 SmartDelay ReadTemperature(1000000UL);
 SmartDelay ReadPoliv(1000000UL);
-
-int hTime = 0;
-int mTime = 0;
-unsigned long int sTime = 0;
 
 // Задекларируем функции
 void LcdPrint(int x, int y, String Str, boolean clear);
 void Key();
 void Menu();
-int CheckAvtopoliv(int g_iTimeSec, int pin, int timeSetup);
+bool CheckTimeAvtopoliv(int pin, long int timeSetup);
 void SetTime(int key);
 
 int MENU_LCD = 0;
@@ -63,27 +64,47 @@ int g_iHumidity = 0;
 long int g_iTimeSec1 = 0;
 long int g_iTimeSec2 = 0;
 long int g_iTimeSec3 = 0;
-long int g_iTimeSetupSettings1 = 10;
-long int g_iTimeSetupSettings2 = 120;
-long int g_iTimeSetupSettings3 = 1200;
+
+String g_sTimeSetupSettings1 = "09:00";
+String g_sTimeSetupSettings2 = "10:00";
+String g_sTimeSetupSettings3 = "11:00";
+String g_sTimeSetupSettingsSetup = "";
+
 int g_iSetParameters = 0;
 int g_iStepSetTime = 0;
-
-
-IRrecv irrecv(12);
-decode_results results;
+String g_sActualTime = "";
 
 void receivesms(String str)
 {
-  if(str == "Offer jtdcb its boon scrub")
-    Serial.write("EEES");
+  if (str == "ON")
+  {
+      digitalWrite(5, HIGH);
+      g_iTimeSec1 = -1000;
+      digitalWrite(6, HIGH);
+      g_iTimeSec2 = -1000;
+      digitalWrite(7, HIGH);
+      g_iTimeSec3 = -1000;
+      g_bMenuReftach = true;
+  } else 
+  if (str == "OFF")
+  {
+      digitalWrite(5, LOW);
+      //g_iTimeSec1 = g_iTimeSetupSettings1;
+      digitalWrite(6, LOW);
+      //g_iTimeSec2 = g_iTimeSetupSettings2;
+      digitalWrite(7, LOW);
+      //g_iTimeSec3 = g_iTimeSetupSettings3;
+      g_bMenuReftach = true;
+  }
+  
+  //Serial.write("EEES");
 }
 
 void setup()
 {
-    g_iTimeSec1 = g_iTimeSetupSettings1;
-    g_iTimeSec2 = g_iTimeSetupSettings2;
-    g_iTimeSec3 = g_iTimeSetupSettings3;
+    //g_iTimeSec1 = g_iTimeSetupSettings1;
+    //g_iTimeSec2 = g_iTimeSetupSettings2;
+    //g_iTimeSec3 = g_iTimeSetupSettings3;
     pinMode(5, OUTPUT); // Полив
     pinMode(6, OUTPUT); // Полив
     pinMode(7, OUTPUT); // Полив
@@ -101,12 +122,20 @@ void setup()
     Serial.println("Start");
     irrecv.enableIRIn(); // Start the receiver
     dht.begin(); // Запускаем датчик
-
+    time.begin();
+    //time.settime(0,45,21,21,02,21,7);  // 0  сек, 51 мин, 21 час, 27, октября, 2015 года, вторник
+    
     sms_device.pt2Func = &receivesms;
 }
 
 void loop()
 {
+    // Время
+    if(millis()%1000==0){ // если прошла 1 секунда
+      g_sActualTime = time.gettime("H:i"); // Получаем время
+      delay(1); // приостанавливаем на 1 мс
+    }
+    
     Key();
     Menu();
     sms_device.Work();
@@ -127,9 +156,9 @@ void loop()
         //Serial.println(g_iTimeSec2);
         //Serial.println(g_iTimeSec3);
 
-        g_iTimeSec1 = CheckAvtopoliv(g_iTimeSec1, 5, g_iTimeSetupSettings1);
-        g_iTimeSec2 = CheckAvtopoliv(g_iTimeSec2, 6, g_iTimeSetupSettings2);
-        g_iTimeSec3 = CheckAvtopoliv(g_iTimeSec3, 7, g_iTimeSetupSettings3);
+        CheckTimeAvtopoliv(5, g_sTimeSetupSettings1);
+        CheckTimeAvtopoliv(6, g_sTimeSetupSettings2);
+        CheckTimeAvtopoliv(7, g_sTimeSetupSettings3);
 
         if(MENU_LCD == MENU_INFO_POLIV1 || MENU_LCD == MENU_INFO_POLIV2 || MENU_LCD == MENU_INFO_POLIV3){
             g_bMenuReftach = true;
@@ -137,27 +166,22 @@ void loop()
     }
 }
 
-long int CheckAvtopoliv(long int g_iTimeSec, int pin, long int timeSetup){
-        // Декрементируем таймер если включен автополив 
-        if(g_iTimeSec != -1000){
-            g_iTimeSec--;
-        }
-        if(g_iTimeSec == 0){
-            digitalWrite(pin, HIGH);
-            return 0;
-        }
-        if(g_iTimeSec == -5){
-            digitalWrite(pin, LOW);
-            return timeSetup;
-        }
-        return g_iTimeSec;
+bool CheckTimeAvtopoliv(int pin, String timeSetup){
+  bool l_bResult = false;
+  if(timeSetup == g_sActualTime){
+    digitalWrite(pin, HIGH);
+    l_bResult = true;
+  } else{
+    digitalWrite(pin, LOW);
+  }
+  return l_bResult;
 }
 
 void Key()
 {
     if (irrecv.decode(&results)) // если данные пришли выполняем команды
     {
-        Serial.println(results.value); // отправляем полученные данные на порт
+        //Serial.println(results.value); // отправляем полученные данные на порт
         switch (MENU_LCD)
         {
         case MENU_HOME:
@@ -168,7 +192,7 @@ void Key()
                 }
                 else{
                     digitalWrite(5, LOW);
-                    g_iTimeSec1 = g_iTimeSetupSettings1;
+                    //g_iTimeSec1 = g_iTimeSetupSettings1;
                 }
             }
             if(results.value == KEY_2){
@@ -178,7 +202,7 @@ void Key()
                 }
                 else{
                     digitalWrite(6, LOW);
-                    g_iTimeSec2 = g_iTimeSetupSettings2;
+                    //g_iTimeSec2 = g_iTimeSetupSettings2;
                 }
             }
             if(results.value == KEY_3){
@@ -188,7 +212,7 @@ void Key()
                 }
                 else{
                     digitalWrite(7, LOW);
-                    g_iTimeSec3 = g_iTimeSetupSettings3;
+                    //g_iTimeSec3 = g_iTimeSetupSettings3;
                 }
             }
             if (results.value == KEY_RIGHT)
@@ -336,6 +360,8 @@ void Key()
             if (results.value == KEY_LEFT)
             {
                 MENU_LCD = g_iSetParameters;
+                g_iStepSetTime = 0;
+                g_sTimeSetupSettingsSetup = "";
             }
             if (results.value == KEY_OK)
             {
@@ -370,11 +396,11 @@ void Key()
         if (results.value == KEY_R)
         {
             digitalWrite(5, LOW);
-            g_iTimeSec1 = g_iTimeSetupSettings1;
+            //g_iTimeSec1 = g_iTimeSetupSettings1;
             digitalWrite(6, LOW);
-            g_iTimeSec2 = g_iTimeSetupSettings2;
+            //g_iTimeSec2 = g_iTimeSetupSettings2;
             digitalWrite(7, LOW);
-            g_iTimeSec3 = g_iTimeSetupSettings3;
+            //g_iTimeSec3 = g_iTimeSetupSettings3;
         }
         g_bMenuReftach = true;
         irrecv.resume();
@@ -382,77 +408,46 @@ void Key()
 }
 
 void SetTime(int key){
-    switch (g_iStepSetTime)
-    {
-        case 0:
-            if(key > 4){
-                return;
-            }
-            hTime = key*10;
-            break;
-        case 1:
-            hTime = hTime + key;
-            break;
-        case 2:
-            if(key > 5){
-                return;
-            }
-            mTime = key*10;
-            break;
-        case 3:
-            mTime = mTime+key;
-            break;
+    // Проверяем данные
+    if(g_iStepSetTime == 0 && key > 2)
+        return;
+    else if(g_iStepSetTime == 1){
+        if((g_sTimeSetupSettingsSetup + String(key)).substring(0, 2).toInt() >= 24)
+            return;
+    } else if(g_iStepSetTime == 2 && key > 5)
+        return;
+    else if(g_iStepSetTime == 3){
+        if((g_sTimeSetupSettingsSetup + ":" + String(key)).substring(3, 5).toInt() >= 60)
+            return;
     }
-    sTime = ((hTime*60)+mTime);
-    sTime = sTime*60;
-    Serial.println("=================");
-    Serial.println(g_iStepSetTime);
-    Serial.println(hTime);
-    Serial.println(mTime);
-    Serial.println(sTime);
-    switch (g_iSetParameters)
-        {
-        case MENU_POLIV1:
-            g_iTimeSetupSettings1 = sTime;
-            g_iTimeSec1 = sTime;
-            break;
-        case MENU_POLIV2:
-            g_iTimeSetupSettings2 = sTime;
-            g_iTimeSec2 = sTime;
-            break;
-        case MENU_POLIV3:
-            g_iTimeSetupSettings3 = sTime;
-            g_iTimeSec3 = sTime;
-            break;
-    }
+
+    if(g_iStepSetTime != 2)
+        g_sTimeSetupSettingsSetup += String(key);
+    else 
+        g_sTimeSetupSettingsSetup += ":" + String(key);
+    
     g_iStepSetTime++;
+    //Serial.print(g_sTimeSetupSettingsSetup + "\r\n");
     if(g_iStepSetTime > 3){
         g_iStepSetTime = 0;
+        //g_sTimeSetupSettingsSetup = "";
+        switch (g_iSetParameters)
+            {
+            case MENU_POLIV1:
+                g_sTimeSetupSettings1 = g_sTimeSetupSettingsSetup;
+                break;
+            case MENU_POLIV2:
+                g_sTimeSetupSettings2 = g_sTimeSetupSettingsSetup;
+                break;
+            case MENU_POLIV3:
+                g_sTimeSetupSettings3 = g_sTimeSetupSettingsSetup;
+                break;
+        }
     }
 }
 
-void SetLcdTime(long int time){
-    if((time < 0) && ((MENU_LCD == MENU_INFO_POLIV1) || (MENU_LCD == MENU_INFO_POLIV2) || (MENU_LCD == MENU_INFO_POLIV3))){
-        lcd.print("полив!");
-        return;
-    }
-    unsigned long int s,m,h=0;
-    s = time;
-    h = s / 3600;
-    m = (s - h * 3600) / 60;
-    s = s - h * 3600 - m * 60;
-    if(h){
-        lcd.print(h);
-        lcd.print("ч");
-    }
-    if(m){
-        lcd.print(m);
-        lcd.print("м");
-    }
-    if(MENU_LCD != MENU_SET_PARAMETERS){
-        lcd.print(s);
-        lcd.print("с");
-    }
+void SetLcdTime(String time){
+    lcd.print(time);
     if(MENU_LCD == MENU_SET_PARAMETERS){
         lcd.setCursor(0,1);
         switch (g_iStepSetTime)
@@ -502,30 +497,33 @@ void Menu()
             break;
         case MENU_INFO_POLIV1:
             LcdPrint(0, 0, "Огурцы: ", true);
-            SetLcdTime(g_iTimeSec1);
+            SetLcdTime(g_sTimeSetupSettings1);
+            LcdPrint(0, 1, "Время: " + g_sActualTime, false);
             break;
         case MENU_INFO_POLIV2:
             LcdPrint(0, 0, "Помидоры: ", true);
-            SetLcdTime(g_iTimeSec2);
+            SetLcdTime(g_sTimeSetupSettings2);
+            LcdPrint(0, 1, "Время: " + g_sActualTime, false);
             break;
         case MENU_INFO_POLIV3:
             LcdPrint(0, 0, "Перец: ", true);
-            SetLcdTime(g_iTimeSec3);
+            SetLcdTime(g_sTimeSetupSettings3);
+            LcdPrint(0, 1, "Время: " + g_sActualTime, false);
             break;
         case MENU_SET_PARAMETERS:
             switch (g_iSetParameters)
             {
             case MENU_POLIV1:
                 LcdPrint(0, 0, "Огурцы: ", true);
-                SetLcdTime(g_iTimeSetupSettings1);
+                SetLcdTime(g_sTimeSetupSettingsSetup);
                 break;
             case MENU_POLIV2:
                 LcdPrint(0, 0, "Помидоры: ", true);
-                SetLcdTime(g_iTimeSetupSettings2);
+                SetLcdTime(g_sTimeSetupSettingsSetup);
                 break;
             case MENU_POLIV3:
                 LcdPrint(0, 0, "Перец: ", true);
-                SetLcdTime(g_iTimeSetupSettings3);
+                SetLcdTime(g_sTimeSetupSettingsSetup);
                 break;
             }
             break;
@@ -551,6 +549,6 @@ void LcdPrint(int x, int y, String Str, boolean clear)
     if(clear){
         lcd.clear();
     }
-    lcd.setCursor(0, 0);
+    lcd.setCursor(x, y);
     lcd.print(Str);
 }

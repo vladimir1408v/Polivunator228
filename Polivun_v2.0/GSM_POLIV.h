@@ -6,14 +6,19 @@ public:
   SoftwareSerial* mySerial;
   String bufferSIM;
   bool ismess = false;
-  void (*pt2Func)(String ) = NULL;
+  void (*pt2Func)(String ) = NULL; // Кэлбек входящего сообщения
 
   SmsWork(){
-    mySerial = new SoftwareSerial(9, 8);
+    // Инициализируем работу виртуального Serial порта
+    mySerial = new SoftwareSerial(10, 11);
     mySerial->begin(4800);
+    // Устанавливаем режим работы GSM модуля в режим текстовых сообщений
     mySerial->write("AT+CMGF=1\r");
   }
 
+  /* Функция Work вызывается в цикле Loop, и проверяет
+     входящие сообщения, если получено новое смс то
+     вызывается функция кэлбэк, заданая в функции Setup*/
   void Work()
   {
     if (mySerial->available())
