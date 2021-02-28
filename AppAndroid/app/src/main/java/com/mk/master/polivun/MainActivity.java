@@ -4,20 +4,27 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.ViewPager;
 
 import android.annotation.SuppressLint;
+import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.telephony.SmsManager;
+import android.text.format.DateUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TabHost;
+import android.widget.TimePicker;
 
 import com.google.android.material.tabs.TabLayout;
+
+import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
 
     CProperty m_Property;
     CDialog m_Dialog;
+
+    Calendar dateAndTime=Calendar.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +47,45 @@ public class MainActivity extends AppCompatActivity {
 
         tabHost.setCurrentTab(0);
 
+        setInitialDateTime();
+    }
+
+    // установка обработчика выбора времени
+    TimePickerDialog.OnTimeSetListener t=new TimePickerDialog.OnTimeSetListener() {
+        public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+            dateAndTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
+            dateAndTime.set(Calendar.MINUTE, minute);
+            setInitialDateTime();
+        }
+    };
+
+    // установка начальных даты и времени
+    private void setInitialDateTime() {
+        CDialog.Toast(this, DateUtils.formatDateTime(this,
+                dateAndTime.getTimeInMillis(),
+                DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR
+                        | DateUtils.FORMAT_SHOW_TIME));
+    }
+
+    // отображаем диалоговое окно для выбора времени
+    public void setTime() {
+        new TimePickerDialog(MainActivity.this, t,
+                dateAndTime.get(Calendar.HOUR_OF_DAY),
+                dateAndTime.get(Calendar.MINUTE), true)
+                .show();
+    }
+
+    @SuppressLint("NonConstantResourceId")
+    public void SetTimePoliv(View v) throws Exception {
+        switch (v.getId())
+        {
+            case R.id.poliv1:
+                setTime();
+                break;
+            case R.id.poliv2:
+                setTime();
+                break;
+        }
     }
 
     @SuppressLint("NonConstantResourceId")

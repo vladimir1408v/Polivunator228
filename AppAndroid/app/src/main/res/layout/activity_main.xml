@@ -47,12 +47,6 @@
                         android:onClick="onClick"
                         android:text="Выключить полив" />
 
-                    <Button
-                        android:id="@+id/button2"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:onClick="onClick"
-                        android:text="Button" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -62,11 +56,18 @@
                     android:orientation="vertical">
 
                     <Button
-                        android:id="@+id/button5"
+                        android:id="@+id/poliv1"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:onClick="PolivOn"
-                        android:text="Включить полив" />
+                        android:onClick="SetTimePoliv"
+                        android:text="Установить время полива 1" />
+
+                    <Button
+                        android:id="@+id/poliv2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:onClick="SetTimePoliv"
+                        android:text="Установить время полива 2" />
 
                 </LinearLayout>
 
