@@ -11,6 +11,7 @@ import android.telephony.SmsManager;
 import android.text.format.DateUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TabHost;
 import android.widget.TimePicker;
@@ -23,6 +24,11 @@ public class MainActivity extends AppCompatActivity {
 
     CProperty m_Property;
     CDialog m_Dialog;
+    String m_sSendData = "";
+
+    TabHost tabHost;
+
+    float lastX = 0;
 
     Calendar dateAndTime=Calendar.getInstance();
 
@@ -33,8 +39,8 @@ public class MainActivity extends AppCompatActivity {
 
         m_Property =  new CProperty(this);
 
-        setTitle("Поливун");
-        TabHost tabHost = (TabHost) findViewById(R.id.tabHost);
+        setTitle("Полив");
+        tabHost = (TabHost) findViewById(R.id.tabHost);
         tabHost.setup();
         TabHost.TabSpec tabSpec = tabHost.newTabSpec("tag1");
         tabSpec.setContent(R.id.tab1);
@@ -46,8 +52,6 @@ public class MainActivity extends AppCompatActivity {
         tabHost.addTab(tabSpec);
 
         tabHost.setCurrentTab(0);
-
-        setInitialDateTime();
     }
 
     // установка обработчика выбора времени
@@ -55,16 +59,17 @@ public class MainActivity extends AppCompatActivity {
         public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
             dateAndTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
             dateAndTime.set(Calendar.MINUTE, minute);
-            setInitialDateTime();
+            try {
+                setInitialDateTime();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     };
 
     // установка начальных даты и времени
-    private void setInitialDateTime() {
-        CDialog.Toast(this, DateUtils.formatDateTime(this,
-                dateAndTime.getTimeInMillis(),
-                DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR
-                        | DateUtils.FORMAT_SHOW_TIME));
+    private void setInitialDateTime() throws Exception {
+        sendSmsMessage(m_sSendData + " " + DateUtils.formatDateTime(this, dateAndTime.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME));
     }
 
     // отображаем диалоговое окно для выбора времени
@@ -80,9 +85,14 @@ public class MainActivity extends AppCompatActivity {
         switch (v.getId())
         {
             case R.id.poliv1:
+                m_sSendData = "0";
                 setTime();
                 break;
             case R.id.poliv2:
+                m_sSendData = "1";
+                setTime();
+            case R.id.poliv3:
+                m_sSendData = "2";
                 setTime();
                 break;
         }
@@ -98,6 +108,52 @@ public class MainActivity extends AppCompatActivity {
             case R.id.button4:
                 sendSmsMessage("OFF");
                 break;
+        }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent touchevent) {
+        switch (touchevent.getAction()) {
+            // when user first touches the screen to swap
+            case MotionEvent.ACTION_DOWN: {
+                lastX = touchevent.getX();
+                break;
+            }
+            case MotionEvent.ACTION_UP: {
+                float currentX = touchevent.getX();
+
+                // if left to right swipe on screen
+                if (lastX < currentX) {
+
+                    switchTabs(false);
+                }
+
+                // if right to left swipe on screen
+                if (lastX > currentX) {
+                    switchTabs(true);
+                }
+
+                break;
+            }
+        }
+        return false;
+    }
+
+    public void switchTabs(boolean direction) {
+        if (direction) // true = move left
+        {
+            if (tabHost.getCurrentTab() == 0)
+                tabHost.setCurrentTab(tabHost.getTabWidget().getTabCount() - 1);
+            else
+                tabHost.setCurrentTab(tabHost.getCurrentTab() - 1);
+        } else
+        // move right
+        {
+            if (tabHost.getCurrentTab() != (tabHost.getTabWidget()
+                    .getTabCount() - 1))
+                tabHost.setCurrentTab(tabHost.getCurrentTab() + 1);
+            else
+                tabHost.setCurrentTab(0);
         }
     }
 

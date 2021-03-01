@@ -69,6 +69,13 @@
                         android:onClick="SetTimePoliv"
                         android:text="Установить время полива 2" />
 
+                    <Button
+                        android:id="@+id/poliv3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:onClick="SetTimePoliv"
+                        android:text="Установить время полива 2" />
+
                 </LinearLayout>
 
             </FrameLayout>

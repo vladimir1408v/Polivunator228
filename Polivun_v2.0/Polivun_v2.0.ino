@@ -74,6 +74,22 @@ int g_iSetParameters = 0;
 int g_iStepSetTime = 0;
 String g_sActualTime = "";
 
+String getValue(String data, char separator, int index)
+{
+    int found = 0;
+    int strIndex[] = { 0, -1 };
+    int maxIndex = data.length() - 1;
+
+    for (int i = 0; i <= maxIndex && found <= index; i++) {
+        if (data.charAt(i) == separator || i == maxIndex) {
+            found++;
+            strIndex[0] = strIndex[1] + 1;
+            strIndex[1] = (i == maxIndex) ? i+1 : i;
+        }
+    }
+    return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
+}
+
 void receivesms(String str)
 {
   if (str == "ON")
@@ -84,20 +100,26 @@ void receivesms(String str)
       g_iTimeSec2 = -1000;
       digitalWrite(7, HIGH);
       g_iTimeSec3 = -1000;
+
       g_bMenuReftach = true;
-  } else 
-  if (str == "OFF")
+
+  } 
+  else if (str == "OFF")
   {
       digitalWrite(5, LOW);
-      //g_iTimeSec1 = g_iTimeSetupSettings1;
       digitalWrite(6, LOW);
-      //g_iTimeSec2 = g_iTimeSetupSettings2;
       digitalWrite(7, LOW);
-      //g_iTimeSec3 = g_iTimeSetupSettings3;
+
       g_bMenuReftach = true;
+
   }
-  
-  //Serial.write("EEES");
+  else if(getValue(str, ' ', 0) == "0")
+      g_sTimeSetupSettings1 = getValue(str, ' ', 1);
+  else if(getValue(str, ' ', 0) == "1")
+      g_sTimeSetupSettings2 = getValue(str, ' ', 1);
+  else if(getValue(str, ' ', 0) == "2")
+      g_sTimeSetupSettings3 = getValue(str, ' ', 1);
+
 }
 
 void setup()
