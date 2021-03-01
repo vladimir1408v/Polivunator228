@@ -124,9 +124,6 @@ void receivesms(String str)
 
 void setup()
 {
-    //g_iTimeSec1 = g_iTimeSetupSettings1;
-    //g_iTimeSec2 = g_iTimeSetupSettings2;
-    //g_iTimeSec3 = g_iTimeSetupSettings3;
     pinMode(5, OUTPUT); // Полив
     pinMode(6, OUTPUT); // Полив
     pinMode(7, OUTPUT); // Полив
@@ -145,7 +142,7 @@ void setup()
     irrecv.enableIRIn(); // Start the receiver
     dht.begin(); // Запускаем датчик
     time.begin();
-    //time.settime(0,45,21,21,02,21,7);  // 0  сек, 51 мин, 21 час, 27, октября, 2015 года, вторник
+    //time.settime(0,45,21,21,02,21,7);
     
     sms_device.pt2Func = &receivesms;
 }
@@ -174,10 +171,6 @@ void loop()
     }
     // Проверяем нужно ли что ни будь полить
     if(ReadPoliv.Now()){
-        //Serial.println(g_iTimeSec1);
-        //Serial.println(g_iTimeSec2);
-        //Serial.println(g_iTimeSec3);
-
         CheckTimeAvtopoliv(5, g_sTimeSetupSettings1);
         CheckTimeAvtopoliv(6, g_sTimeSetupSettings2);
         CheckTimeAvtopoliv(7, g_sTimeSetupSettings3);
@@ -449,10 +442,10 @@ void SetTime(int key){
         g_sTimeSetupSettingsSetup += ":" + String(key);
     
     g_iStepSetTime++;
-    //Serial.print(g_sTimeSetupSettingsSetup + "\r\n");
+
     if(g_iStepSetTime > 3){
         g_iStepSetTime = 0;
-        //g_sTimeSetupSettingsSetup = "";
+
         switch (g_iSetParameters)
             {
             case MENU_POLIV1:
