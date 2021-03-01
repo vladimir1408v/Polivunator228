@@ -114,25 +114,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onTouchEvent(MotionEvent touchevent) {
         switch (touchevent.getAction()) {
-            // when user first touches the screen to swap
             case MotionEvent.ACTION_DOWN: {
                 lastX = touchevent.getX();
                 break;
             }
             case MotionEvent.ACTION_UP: {
                 float currentX = touchevent.getX();
-
-                // if left to right swipe on screen
                 if (lastX < currentX) {
-
                     switchTabs(false);
                 }
-
                 // if right to left swipe on screen
                 if (lastX > currentX) {
                     switchTabs(true);
                 }
-
                 break;
             }
         }
@@ -147,7 +141,6 @@ public class MainActivity extends AppCompatActivity {
             else
                 tabHost.setCurrentTab(tabHost.getCurrentTab() - 1);
         } else
-        // move right
         {
             if (tabHost.getCurrentTab() != (tabHost.getTabWidget()
                     .getTabCount() - 1))
