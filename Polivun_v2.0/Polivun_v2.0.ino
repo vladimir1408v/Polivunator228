@@ -69,6 +69,7 @@ String g_sTimeSetupSettings1 = "09:00";
 String g_sTimeSetupSettings2 = "10:00";
 String g_sTimeSetupSettings3 = "11:00";
 String g_sTimeSetupSettingsSetup = "";
+bool   g_GlobalPoliv = false;
 
 int g_iSetParameters = 0;
 int g_iStepSetTime = 0;
@@ -101,6 +102,8 @@ void receivesms(String str)
       digitalWrite(7, HIGH);
       g_iTimeSec3 = -1000;
 
+      g_GlobalPoliv = true;
+
       g_bMenuReftach = true;
 
   } 
@@ -110,9 +113,13 @@ void receivesms(String str)
       digitalWrite(6, LOW);
       digitalWrite(7, LOW);
 
+      g_GlobalPoliv = false;
+
       g_bMenuReftach = true;
 
   }
+  if(getValue(str, ' ', 1).length() == 4)
+    str = "0"+str;
   else if(getValue(str, ' ', 0) == "0")
       g_sTimeSetupSettings1 = getValue(str, ' ', 1);
   else if(getValue(str, ' ', 0) == "1")
@@ -183,6 +190,8 @@ void loop()
 
 bool CheckTimeAvtopoliv(int pin, String timeSetup){
   bool l_bResult = false;
+  if(g_GlobalPoliv)
+    return l_bResult;
   if(timeSetup == g_sActualTime){
     digitalWrite(pin, HIGH);
     l_bResult = true;

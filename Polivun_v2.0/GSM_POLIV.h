@@ -29,8 +29,8 @@ public:
       if (readSIM == '\r')
       {
 
-        //for (int i = 0; i < bufferSIM.length(); i++)
-          //Serial.write(bufferSIM[i]);
+        for (int i = 0; i < bufferSIM.length(); i++)
+          Serial.write(bufferSIM[i]);
           
         if (bufferSIM.substring(1, 6) == "+CMTI")
         {
@@ -43,6 +43,7 @@ public:
         {
             ismess = false;
             pt2Func(bufferSIM.substring(1).substring(0, bufferSIM.length()-2));
+            mySerial->write("AT+CMGD=1\r");
         }
 
         if (bufferSIM.substring(1, 6) == "+CMGR")
