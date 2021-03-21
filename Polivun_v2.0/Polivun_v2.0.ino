@@ -61,9 +61,9 @@ boolean g_bLcdBrigtlight = true;
 // Таймер полива
 int g_iTemp = 0;
 int g_iHumidity = 0;
-long int g_iTimeSec1 = 0;
-long int g_iTimeSec2 = 0;
-long int g_iTimeSec3 = 0;
+bool g_iTimeSec1 = 0;
+bool g_iTimeSec2 = 0;
+bool g_iTimeSec3 = 0;
 
 String g_sTimeSetupSettings1 = "09:00";
 String g_sTimeSetupSettings2 = "10:00";
@@ -96,12 +96,12 @@ void receivesms(String str)
   if (str == "ON")
   {
       digitalWrite(5, HIGH);
-      g_iTimeSec1 = -1000;
       digitalWrite(6, HIGH);
-      g_iTimeSec2 = -1000;
       digitalWrite(7, HIGH);
-      g_iTimeSec3 = -1000;
 
+      g_iTimeSec1 = true;
+      g_iTimeSec2 = true;
+      g_iTimeSec3 = true;
       g_GlobalPoliv = true;
 
       g_bMenuReftach = true;
@@ -113,6 +113,9 @@ void receivesms(String str)
       digitalWrite(6, LOW);
       digitalWrite(7, LOW);
 
+      g_iTimeSec1 = false;
+      g_iTimeSec2 = false;
+      g_iTimeSec3 = false;
       g_GlobalPoliv = false;
 
       g_bMenuReftach = true;
@@ -190,7 +193,7 @@ void loop()
 
 bool CheckTimeAvtopoliv(int pin, String timeSetup){
   bool l_bResult = false;
-  if(g_GlobalPoliv)
+  if(g_GlobalPoliv || g_iTimeSec1 || g_iTimeSec2 || g_iTimeSec3)
     return l_bResult;
   if(timeSetup == g_sActualTime){
     digitalWrite(pin, HIGH);
@@ -210,33 +213,36 @@ void Key()
         {
         case MENU_HOME:
             if(results.value == KEY_1){
-                if(g_iTimeSec1 != -1000){
+                if(!g_iTimeSec1){
                     digitalWrite(5, HIGH);
-                    g_iTimeSec1 = -1000;
+                    g_iTimeSec1 = true;
                 }
                 else{
                     digitalWrite(5, LOW);
-                    //g_iTimeSec1 = g_iTimeSetupSettings1;
+                    g_iTimeSec1 = false;
+                    g_GlobalPoliv = false;
                 }
             }
             if(results.value == KEY_2){
-                if(g_iTimeSec2 != -1000){
+                if(!g_iTimeSec2){
                     digitalWrite(6, HIGH);
-                    g_iTimeSec2 = -1000;
+                    g_iTimeSec2 = true;
                 }
                 else{
                     digitalWrite(6, LOW);
-                    //g_iTimeSec2 = g_iTimeSetupSettings2;
+                    g_iTimeSec2 = false;
+                    g_GlobalPoliv = false;
                 }
             }
             if(results.value == KEY_3){
-                if(g_iTimeSec3 != -1000){
+                if(!g_iTimeSec3){
                     digitalWrite(7, HIGH);
-                    g_iTimeSec3 = -1000;
+                    g_iTimeSec3 = true;
                 }
                 else{
                     digitalWrite(7, LOW);
-                    //g_iTimeSec3 = g_iTimeSetupSettings3;
+                    g_iTimeSec3 = false;
+                    g_GlobalPoliv = false;
                 }
             }
             if (results.value == KEY_RIGHT)
@@ -411,20 +417,24 @@ void Key()
         if (results.value == KEY_Z)
         {
             digitalWrite(5, HIGH);
-            g_iTimeSec1 = -1000;
             digitalWrite(6, HIGH);
-            g_iTimeSec2 = -1000;
             digitalWrite(7, HIGH);
-            g_iTimeSec3 = -1000;
+
+            g_iTimeSec1 = true;
+            g_iTimeSec2 = true;
+            g_iTimeSec3 = true;
+            g_GlobalPoliv = true;
         }
         if (results.value == KEY_R)
         {
             digitalWrite(5, LOW);
-            //g_iTimeSec1 = g_iTimeSetupSettings1;
             digitalWrite(6, LOW);
-            //g_iTimeSec2 = g_iTimeSetupSettings2;
             digitalWrite(7, LOW);
-            //g_iTimeSec3 = g_iTimeSetupSettings3;
+
+            g_iTimeSec1 = false;
+            g_iTimeSec2 = false;
+            g_iTimeSec3 = false;
+            g_GlobalPoliv = false;
         }
         g_bMenuReftach = true;
         irrecv.resume();
